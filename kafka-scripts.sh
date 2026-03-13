@@ -26,7 +26,7 @@ wait_for_services() {
     
     # Wait for Kafka
     print_status "Waiting for Kafka..."
-    while ! docker exec kafka kafka-topics --bootstrap-server localhost:9092 --list &>/dev/null; do
+    while ! docker exec broker kafka-topics --bootstrap-server localhost:9092 --list &>/dev/null; do
         echo -n "."
         sleep 2
     done
@@ -57,21 +57,21 @@ create_topics() {
     print_status "Creating Kafka topics..."
     
     # Create topics for Debezium
-    docker exec kafka kafka-topics --create \
+    docker exec broker kafka-topics --create \
         --bootstrap-server localhost:9092 \
         --replication-factor 1 \
         --partitions 3 \
         --topic lakehouse.trips \
         --if-not-exists
     
-    docker exec kafka kafka-topics --create \
+    docker exec broker kafka-topics --create \
         --bootstrap-server localhost:9092 \
         --replication-factor 1 \
         --partitions 1 \
         --topic lakehouse.payment_types \
         --if-not-exists
     
-    docker exec kafka kafka-topics --create \
+    docker exec broker kafka-topics --create \
         --bootstrap-server localhost:9092 \
         --replication-factor 1 \
         --partitions 1 \
@@ -79,28 +79,28 @@ create_topics() {
         --if-not-exists
     
     # Create connector management topics
-    docker exec kafka kafka-topics --create \
+    docker exec broker kafka-topics --create \
         --bootstrap-server localhost:9092 \
         --replication-factor 1 \
         --partitions 1 \
         --topic my_connect_configs \
         --if-not-exists
     
-    docker exec kafka kafka-topics --create \
+    docker exec broker kafka-topics --create \
         --bootstrap-server localhost:9092 \
         --replication-factor 1 \
         --partitions 1 \
         --topic my_connect_offsets \
         --if-not-exists
     
-    docker exec kafka kafka-topics --create \
+    docker exec broker kafka-topics --create \
         --bootstrap-server localhost:9092 \
         --replication-factor 1 \
         --partitions 1 \
         --topic my_connect_statuses \
         --if-not-exists
     
-    docker exec kafka kafka-topics --create \
+    docker exec broker kafka-topics --create \
         --bootstrap-server localhost:9092 \
         --replication-factor 1 \
         --partitions 1 \
@@ -113,7 +113,7 @@ create_topics() {
 # List all topics
 list_topics() {
     print_status "Listing Kafka topics..."
-    docker exec kafka kafka-topics --bootstrap-server localhost:9092 --list
+    docker exec broker kafka-topics --bootstrap-server localhost:9092 --list
 }
 
 # Deploy Debezium connector
@@ -154,7 +154,7 @@ delete_connector() {
 # Consumer test for trips topic
 consume_trips() {
     print_status "Consuming messages from lakehouse.trips topic (Press Ctrl+C to stop)..."
-    docker exec kafka kafka-console-consumer \
+    docker exec broker kafka-console-consumer \
         --bootstrap-server localhost:9092 \
         --topic lakehouse.trips \
         --from-beginning \
@@ -165,7 +165,7 @@ consume_trips() {
 # Consumer test with JSON formatting
 consume_trips_formatted() {
     print_status "Consuming formatted messages from lakehouse.trips topic (Press Ctrl+C to stop)..."
-    docker exec kafka kafka-console-consumer \
+    docker exec broker kafka-console-consumer \
         --bootstrap-server localhost:9092 \
         --topic lakehouse.trips \
         --from-beginning \
@@ -177,14 +177,14 @@ consume_trips_formatted() {
 describe_topic() {
     local topic=${1:-lakehouse.trips}
     print_status "Describing topic: $topic"
-    docker exec kafka kafka-topics --bootstrap-server localhost:9092 --describe --topic $topic
+    docker exec broker kafka-topics --bootstrap-server localhost:9092 --describe --topic $topic
 }
 
 # Reset consumer group
 reset_consumer_group() {
     local group=${1:-test-group}
     print_warning "Resetting consumer group: $group"
-    docker exec kafka kafka-consumer-groups \
+    docker exec broker kafka-consumer-groups \
         --bootstrap-server localhost:9092 \
         --group $group \
         --reset-offsets \
@@ -197,7 +197,7 @@ reset_consumer_group() {
 consumer_group_info() {
     local group=${1:-test-group}
     print_status "Consumer group info: $group"
-    docker exec kafka kafka-consumer-groups \
+    docker exec broker kafka-consumer-groups \
         --bootstrap-server localhost:9092 \
         --group $group \
         --describe
@@ -207,7 +207,7 @@ consumer_group_info() {
 monitor_lag() {
     print_status "Monitoring consumer lag..."
     while true; do
-        docker exec kafka kafka-consumer-groups \
+        docker exec broker kafka-consumer-groups \
             --bootstrap-server localhost:9092 \
             --group debezium \
             --describe
@@ -220,7 +220,7 @@ monitor_lag() {
 produce_test_message() {
     print_status "Producing test message to lakehouse.trips topic..."
     echo '{"test": "message", "timestamp": "'$(date -Iseconds)'"}' | \
-    docker exec -i kafka kafka-console-producer \
+    docker exec -i broker kafka-console-producer \
         --bootstrap-server localhost:9092 \
         --topic lakehouse.trips
     print_status "Test message sent!"

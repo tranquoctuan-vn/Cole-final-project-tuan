@@ -1,3 +1,26 @@
+# Triển khai nhanh toàn bộ dự án
+
+Bạn có thể triển khai toàn bộ stack (Kafka, Airflow, Spark, MinIO, API, Dashboard...) bằng một lệnh:
+
+```bash
+./deploy.sh
+```
+
+Script sẽ tự động:
+- tải các Spark/Iceberg JAR cần thiết,
+- build + khởi động các container Docker Compose,
+- chờ các dịch vụ chính sẵn sàng,
+- tạo Kafka topics và deploy Debezium connector.
+
+## Truy cập nhanh sau khi triển khai
+- Airflow: http://localhost:8080
+- Control Center: http://localhost:9021
+- MinIO Console: http://localhost:9001
+- API docs: http://localhost:8000/docs
+- Dashboard: http://localhost:8501
+
+---
+
 # Session 1: Data Ingestion Setup Guide
 
 ## Prerequisites
